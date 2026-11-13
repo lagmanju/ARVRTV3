@@ -41,14 +41,19 @@
       }
 
       * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-      html, body { height: 100%; background: var(--paper); overflow: hidden; font-family: var(--display); color: var(--ink); }
+      html, body { height: 100%; overflow: hidden; font-family: var(--display); color: var(--ink); }
+      body {
+        display: flex; flex-direction: column;
+        height: 100vh; height: 100dvh;
+        background: radial-gradient(120% 70% at 50% 42%, #ffffff 0%, #F4F2ED 62%, #ECE8DF 100%);
+      }
       button { font-family: inherit; color: inherit; }
 
       model-viewer#viewer {
-        width: 100vw;
-        height: 100vh;
-        height: 100dvh;
-        background: radial-gradient(120% 70% at 50% 34%, #ffffff 0%, #F4F2ED 62%, #ECE8DF 100%);
+        /* Fills only the open space between the header and the sheet */
+        flex: 1 1 0; min-height: 0;
+        width: 100%; height: auto;
+        background: transparent;
         --poster-color: transparent;
         --ar-button-display: none;
       }
@@ -73,14 +78,15 @@
 
       /* ---------- TOP ---------- */
       .top-ui {
-        position: absolute; top: 0; left: 0; right: 0; z-index: 5;
-        padding: calc(env(safe-area-inset-top) + 14px) 18px 0;
+        position: relative; z-index: 5; flex: 0 0 auto;
+        padding: calc(env(safe-area-inset-top) + 14px) 18px 4px;
         pointer-events: none;
       }
+      body.in-ar .top-ui { position: absolute; top: 0; left: 0; right: 0; }
       .top-row { display: flex; justify-content: space-between; align-items: center; }
       .headline {
         margin-top: 16px;
-        font-size: 40px; line-height: 0.95; font-weight: 900; letter-spacing: -1.8px;
+        font-size: 36px; line-height: 0.95; font-weight: 900; letter-spacing: -1.6px;
       }
       .headline mark {
         background: var(--c-yellow); color: var(--ink);
@@ -89,16 +95,48 @@
       }
       .tagline { margin-top: 10px; font-size: 14px; font-weight: 500; color: var(--muted); max-width: 260px; }
       body.in-ar .headline, body.in-ar .tagline { display: none; }
+      @media (max-height: 760px) { .tagline { display: none; } .headline { margin-top: 10px; font-size: 30px; } }
 
       /* ---------- BOTTOM SHEET ---------- */
       .sheet {
-        position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
+        position: relative; z-index: 5; flex: 0 0 auto;
+        margin-top: -28px;
         background: var(--paper);
         border-top-left-radius: 28px; border-top-right-radius: 28px;
         border-top: 2px solid var(--ink);
-        padding: 10px 0 calc(env(safe-area-inset-bottom) + 14px);
+        padding: 0 0 calc(env(safe-area-inset-bottom) + 14px);
         box-shadow: 0 -10px 30px rgba(0,0,0,0.12);
+        transition: transform 0.25s cubic-bezier(.2,.9,.3,1);
       }
+      body.in-ar .sheet { position: absolute; left: 0; right: 0; bottom: 0; margin-top: 0; }
+
+      /* Drag handle: swipe down to collapse, swipe up or tap to expand */
+      .handle { padding-top: 10px; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+      .sheet.collapsed .sheet-head, .sheet.collapsed .sheet-body { display: none; }
+
+      /* Collapsed "peek" summary */
+      .peek { display: none; align-items: center; gap: 12px; padding: 0 16px 4px; }
+      .sheet.collapsed .peek { display: flex; animation: peekIn 0.22s ease-out; }
+      @keyframes peekIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+      .peek-chip {
+        flex: 0 0 auto; width: 56px; height: 56px; border-radius: 16px;
+        border: 2px solid var(--ink); box-shadow: 0 3px 0 var(--ink);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 23px; font-weight: 900; letter-spacing: -1px;
+      }
+      .peek-chip.yellow { background: var(--c-yellow); }
+      .peek-chip.blue { background: var(--c-blue); }
+      .peek-chip.green { background: var(--c-green); }
+      .peek-chip.coral { background: var(--c-coral); }
+      .peek-chip.purple { background: var(--c-purple); }
+      .peek-chip.black { background: var(--c-black); color: var(--white); }
+      .peek-info { flex: 1; min-width: 0; }
+      .peek-name { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .peek-meta { font-family: var(--mono); font-size: 10.5px; font-weight: 700; color: var(--muted); margin-top: 4px; text-transform: uppercase; white-space: nowrap; }
+      .peek-right { flex: 0 0 auto; text-align: right; }
+      .peek-price { font-size: 19px; font-weight: 800; letter-spacing: -0.6px; line-height: 1; }
+      .peek-price sup { font-size: 9px; font-weight: 700; vertical-align: top; position: relative; top: 2px; }
+      .peek-hint { font-family: var(--mono); font-size: 9.5px; font-weight: 700; text-transform: uppercase; margin-top: 5px; opacity: 0.55; }
       .grabber { width: 40px; height: 5px; border-radius: 3px; background: rgba(17,17,17,0.18); margin: 0 auto 10px; }
 
       .sheet-head {
@@ -220,7 +258,7 @@
 
       /* ---------- TOAST ---------- */
       .toast {
-        position: absolute; left: 50%; top: calc(env(safe-area-inset-top) + 58px);
+        position: absolute; left: 50%; top: 12px;
         transform: translate(-50%, -8px);
         background: var(--ink); color: var(--white);
         font-size: 13.5px; font-weight: 600;
@@ -229,9 +267,20 @@
         opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none;
       }
       .toast.show { opacity: 1; transform: translate(-50%, 0); }
+      body.in-ar .toast { top: calc(env(safe-area-inset-top) + 58px); }
     </style>
   </head>
   <body>
+
+    <!-- Header sits above the preview; during Android AR it moves inside model-viewer -->
+    <div class="top-ui">
+      <div class="top-row">
+        <span class="pill dark"><span class="dot"></span>Fit Check</span>
+        <span class="pill light" id="mode-pill">True scale</span>
+      </div>
+      <h1 class="headline">Will it <mark>fit?</mark></h1>
+      <p class="tagline">Scroll real sizes and see each one on your wall before you buy.</p>
+    </div>
 
     <model-viewer
       id="viewer"
@@ -244,22 +293,17 @@
       shadow-intensity="0"
       alt="True-scale TV preview">
 
-      <!-- Everything inside model-viewer stays visible during WebXR AR on Android -->
-      <div class="top-ui">
-        <div class="top-row">
-          <span class="pill dark"><span class="dot"></span>Fit Check</span>
-          <span class="pill light" id="mode-pill">True scale</span>
-        </div>
-        <h1 class="headline">Will it <mark>fit?</mark></h1>
-        <p class="tagline">Scroll real sizes and see each one on your wall before you buy.</p>
-      </div>
 
       <div class="toast" id="toast"></div>
 
       <div class="dim" slot="hotspot-width" data-position="0 0.5 0.04" data-normal="0 0 1" id="dim-width"></div>
       <div class="dim" slot="hotspot-height" data-position="0.7 0 0.04" data-normal="0 0 1" id="dim-height"></div>
 
-      <div class="sheet" id="sheet">
+    </model-viewer>
+
+    <!-- Sheet sits below the preview; during Android AR it moves inside model-viewer so it stays on screen -->
+    <div class="sheet" id="sheet">
+      <div class="handle" id="handle">
         <div class="grabber"></div>
         <div class="sheet-head">
           <span class="sheet-title">Pick a size · 6 options</span>
@@ -267,7 +311,20 @@
             <span class="swatch"></span>Compare
           </button>
         </div>
+        <div class="peek" id="peek">
+          <div class="peek-chip" id="peek-chip"></div>
+          <div class="peek-info">
+            <div class="peek-name" id="peek-name"></div>
+            <div class="peek-meta" id="peek-meta"></div>
+          </div>
+          <div class="peek-right">
+            <div class="peek-price" id="peek-price"></div>
+            <div class="peek-hint">Swipe up ↑</div>
+          </div>
+        </div>
+      </div>
 
+      <div class="sheet-body">
         <div class="bento">
           <div class="tile size">
             <span class="k">Selected</span>
@@ -296,7 +353,7 @@
           </button>
         </div>
       </div>
-    </model-viewer>
+    </div>
 
     <!-- iPhone only: Quick Look cannot show web UI, so this viewer holds a
          single-size model (selected TV plus neighbor outlines) for launching AR -->
@@ -473,7 +530,20 @@
           void val.offsetWidth;
           val.classList.add('bump');
         }
+        updatePeek();
         updateCartButton();
+      }
+
+      function updatePeek() {
+        const tv = TVS[current];
+        const d = dims(tv.size);
+        const chip = document.getElementById('peek-chip');
+        chip.className = 'peek-chip ' + tv.color;
+        chip.textContent = tv.size + '"';
+        document.getElementById('peek-name').textContent = tv.name;
+        document.getElementById('peek-meta').textContent =
+          d.ow.toFixed(1) + ' × ' + d.oh.toFixed(1) + ' in · ★ ' + tv.rating;
+        document.getElementById('peek-price').innerHTML = priceHTML(tv.price);
       }
 
       function updateCartButton() {
@@ -559,6 +629,7 @@
         ticking = true;
         requestAnimationFrame(() => {
           ticking = false;
+          if (suppressScroll || collapsed) return;
           select(nearestCard(), true);
         });
       }, { passive: true });
@@ -603,6 +674,7 @@
       viewer.addEventListener('ar-status', (e) => {
         const s = e.detail.status;
         if (s === 'session-started') {
+          placeUI(true);
           document.body.classList.add('in-ar');
           modePill.textContent = 'Live on your wall';
           showToast('Aim at a wall and tap to place. Scroll below to try other sizes.', 4500);
@@ -610,6 +682,7 @@
           showToast('Placed at true scale. Scroll sizes to compare.', 2500);
         } else if (s === 'not-presenting' || s === 'failed') {
           document.body.classList.remove('in-ar');
+          placeUI(false);
           modePill.textContent = 'True scale';
           if (s === 'failed') showToast('AR could not start on this device.', 3000);
         }
@@ -625,6 +698,59 @@
         arBtn.disabled = !canAR;
         if (!canAR) arLabel.textContent = 'Open on phone';
       });
+
+      // ---------- LAYOUT: header and sheet live outside the preview, then move
+      // inside model-viewer during WebXR AR so they show over the camera ----------
+      const topUI = document.querySelector('.top-ui');
+      let suppressScroll = false;
+
+      function recenterCarousel() {
+        suppressScroll = true;
+        centerCard(current, false);
+        requestAnimationFrame(() => requestAnimationFrame(() => { suppressScroll = false; }));
+      }
+
+      function placeUI(inAR) {
+        if (inAR) { viewer.appendChild(topUI); viewer.appendChild(sheet); }
+        else { viewer.before(topUI); viewer.after(sheet); }
+        recenterCarousel();
+      }
+
+      // ---------- SHEET: swipe down to collapse, swipe up or tap to expand ----------
+      const handle = document.getElementById('handle');
+      let collapsed = false;
+
+      function setCollapsed(c) {
+        collapsed = c;
+        sheet.classList.toggle('collapsed', c);
+        if (!c) recenterCarousel();
+      }
+
+      let dragStartY = null, dragDY = 0;
+      handle.addEventListener('pointerdown', (e) => {
+        if (e.target.closest('button')) return;
+        dragStartY = e.clientY;
+        dragDY = 0;
+        sheet.style.transition = 'none';
+        handle.setPointerCapture(e.pointerId);
+      });
+      handle.addEventListener('pointermove', (e) => {
+        if (dragStartY === null) return;
+        dragDY = e.clientY - dragStartY;
+        const offset = collapsed ? Math.min(0, dragDY) * 0.35 : Math.max(0, dragDY);
+        sheet.style.transform = 'translateY(' + offset + 'px)';
+      });
+      function endDrag() {
+        if (dragStartY === null) return;
+        sheet.style.transition = '';
+        sheet.style.transform = '';
+        if (Math.abs(dragDY) < 6) setCollapsed(!collapsed);          // tap toggles
+        else if (!collapsed && dragDY > 50) setCollapsed(true);       // swipe down
+        else if (collapsed && dragDY < -25) setCollapsed(false);      // swipe up
+        dragStartY = null;
+      }
+      handle.addEventListener('pointerup', endDrag);
+      handle.addEventListener('pointercancel', endDrag);
 
       // ---------- INIT ----------
       customElements.whenDefined('model-viewer').then(async () => {
